@@ -23,9 +23,7 @@ Examples
 
 ### UTF32 ###
 
-This class reads ascii hexadecimal bytes from the subordinate input stream and
-converts them to binary bytes. Two hexadecimal bytes are converted to one binary
-byte.
+This class represents the UTF32 encoding scheme.
 
 ```php
 <?php
