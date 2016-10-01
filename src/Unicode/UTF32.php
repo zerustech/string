@@ -21,31 +21,39 @@ namespace ZerusTech\Component\String\Unicode;
 class UTF32
 {
     /**
-     * The range of unicode code space.
+     * The range of unicode codespace.
+     *
+     * @var array The range of unicode codespace.
      */
-    const CODESPACE_RANGE = [0x000000, 0x10ffff];
+    private static $codespaceRange = [0x000000, 0x10ffff];
 
     /**
      * The range of high surrogate code points.
      *
      * High surrogate code points are not valid, thus they can't be used as
      * characters.
+     *
+     * @var array The range of high surrogate code points.
      */
-    const HIGH_SURROGATE_RANGE = [0xd800, 0xdbff];
+    private static $highSurrogateRange = [0xd800, 0xdbff];
 
     /**
      * The range of low surrogate code points.
      *
      * Low surrogate code points are not valid, thus they can't be used as
      * characters.
+     *
+     * @var array The range of low surrogate code points.
      */
-    const LOW_SURROGATE_RANGE = [0xdc00, 0xdfff];
+    private static $lowSurrogateRange = [0xdc00, 0xdfff];
 
     /**
      * The 66 noncharacter code points are guaranteed never to be used for
      * encoding characters.
+     *
+     * @var array The noncharacter code points.
      */
-    const NONCHARACTER_LIST = [
+    private static $noncharacters = [
         0x00fdd0, 0x00fdd1, 0x00fdd2, 0x00fdd3, 0x00fdd4, 0x00fdd5, 0x00fdd6, 0x00fdd7,
         0x00fdd8, 0x00fdd9, 0x00fdda, 0x00fddb, 0x00fddc, 0x00fddd, 0x00fdde, 0x00fddf,
         0x00fde0, 0x00fde1, 0x00fde2, 0x00fde3, 0x00fde4, 0x00fde5, 0x00fde6, 0x00fde7,
@@ -59,8 +67,10 @@ class UTF32
 
     /**
      * List of unicode planes.
+     *
+     * @var array The list of unicode plane specifications.
      */
-    const PLANE_SPECIFICATION_LIST = [
+    private static $planes = [
         0 => ['id' => 'Plane 0', 'range' => [0x0000, 0xffff], 'name' => 'Basic Multilingual Plane', 'alias' => 'BMP', ],
         1 => ['id' => 'Plane 1', 'range' => [0x10000, 0x1ffff], 'name' => 'Supplementary Multilingual Plane', 'alias' => 'SMP', ],
         2 => ['id' => 'Plane 2', 'range' => [0x20000, 0x2ffff], 'name' => 'Supplementary Ideographic Plane', 'alias' => 'SIP', ],
@@ -84,8 +94,9 @@ class UTF32
      * The pattern for converting utf32 to utf8.
      *
      * @link https://en.wikipedia.org/wiki/UTF-8 UTF-8.
+     * @var array The patterns for converting utf32 to utf8.
      */
-    const UTF8_PATTERNS = [
+    private static $plainUTF8Patterns = [
         [0x0000, 0x007f, '0xxxxxxx'],
         [0x0080, 0x07ff, '110xxxxx 10xxxxxx'],
         [0x0800, 0xffff, '1110xxxx 10xxxxxx 10xxxxxx'],
@@ -110,9 +121,10 @@ class UTF32
      *         ],
      *         ...
      *     ]
+     *
      * @var array Compiled patterns for converting utf32 to utf8.
      */
-    static $compiledUTF8Patterns = null;
+    private static $compiledUTF8Patterns = null;
 
     /**
      * Returns the number of all possible code points, including surrogate code
@@ -122,7 +134,7 @@ class UTF32
      */
     public static function numberOfCodePoints()
     {
-        return static::CODESPACE_RANGE[1] - static::CODESPACE_RANGE[0] + 1;
+        return static::$codespaceRange[1] - static::$codespaceRange[0] + 1;
     }
 
     /**
@@ -132,7 +144,7 @@ class UTF32
      */
     public static function numberOfHighSurrogateCodePoints()
     {
-        return static::HIGH_SURROGATE_RANGE[1] - static::HIGH_SURROGATE_RANGE[0] + 1;
+        return static::$highSurrogateRange[1] - static::$highSurrogateRange[0] + 1;
     }
 
     /**
@@ -142,7 +154,7 @@ class UTF32
      */
     public static function numberOfLowSurrogateCodePoints()
     {
-        return static::LOW_SURROGATE_RANGE[1] - static::LOW_SURROGATE_RANGE[0] + 1;
+        return static::$lowSurrogateRange[1] - static::$lowSurrogateRange[0] + 1;
     }
 
     /**
@@ -161,9 +173,9 @@ class UTF32
      *
      * @return int The number of noncharacter code points.
      */
-    public static function numberOfNonCharacterCodePoints()
+    public static function numberOfNoncharacterCodePoints()
     {
-        return count(static::NONCHARACTER_LIST);
+        return count(static::$noncharacters);
     }
 
     /**
@@ -173,7 +185,7 @@ class UTF32
      */
     public static function numberOfCharacterCodePoints()
     {
-        return static::numberOfValidCodePoints() - static::numberOfNonCharacterCodePoints();
+        return static::numberOfValidCodePoints() - static::numberOfNoncharacterCodePoints();
     }
 
     /**
@@ -184,14 +196,14 @@ class UTF32
      * @throws \OutOfBoundsException If no plane of the given index can be
      * found.
      */
-    public static function getPlaneSpecifications($index)
+    public static function getPlanes($index)
     {
-        if (!array_key_exists($index, static::PLANE_SPECIFICATION_LIST)) {
+        if (!array_key_exists($index, static::$planes)) {
 
             throw new \OutOfBoundsException(sprintf("No plane of index: %d can be found.", $index));
         }
 
-        return static::PLANE_SPECIFICATION_LIST[$index];
+        return static::$planes[$index];
     }
 
     /**
@@ -284,7 +296,7 @@ class UTF32
 
             static::$compiledUTF8Patterns = [];
 
-            foreach (static::UTF8_PATTERNS as $pattern) {
+            foreach (static::$plainUTF8Patterns as $pattern) {
 
                 static::$compiledUTF8Patterns[] = static::compileUTF8Pattern($pattern);
             }

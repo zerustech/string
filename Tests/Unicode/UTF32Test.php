@@ -22,32 +22,64 @@ class UTF32Test extends \PHPUnit_Framework_TestCase
 {
     public function setup()
     {
-        $this->nochars = range(0xfdd0, 0xfdef);
+
+        $this->ref = new \ReflectionClass('ZerusTech\Component\String\Unicode\UTF32');
+
+        $this->codespaceRange = $this->ref->getProperty('codespaceRange');
+        $this->codespaceRange->setAccessible(true);
+
+        $this->highSurrogateRange = $this->ref->getProperty('highSurrogateRange');
+        $this->highSurrogateRange->setAccessible(true);
+
+        $this->lowSurrogateRange = $this->ref->getProperty('lowSurrogateRange');
+        $this->lowSurrogateRange->setAccessible(true);
+
+        $this->noncharacters = $this->ref->getProperty('noncharacters');
+        $this->noncharacters->setAccessible(true);
+
+        $this->planes = $this->ref->getProperty('planes');
+        $this->planes->setAccessible(true);
+
+        $this->plainUTF8Patterns = $this->ref->getProperty('plainUTF8Patterns');
+        $this->plainUTF8Patterns->setAccessible(true);
+
+        $this->compiledUTF8Patterns = $this->ref->getProperty('compiledUTF8Patterns');
+        $this->compiledUTF8Patterns->setAccessible(true);
+
+        $this->nonchars = range(0xfdd0, 0xfdef);
 
         foreach (range(0x00, 0x10) as $i) {
 
             $i = $i << 16;
 
-            $this->nochars[] = $i + 0xfffe;
+            $this->nonchars[] = $i + 0xfffe;
 
-            $this->nochars[] = $i + 0xffff;
+            $this->nonchars[] = $i + 0xffff;
         }
     }
 
     public function tearDown()
     {
-        $this->nochars = null;
+        $this->nonchars = null;
+        $this->compiledUTF8Patterns = null;
+        $this->plainUTF8Patterns = null;
+        $this->planes = null;
+        $this->noncharacters = null;
+        $this->lowSurrogateRange = null;
+        $this->highSurrogateRange = null;
+        $this->codespaceRange = null;
+        $this->ref = null;
     }
 
     public function testConstants()
     {
-        $this->assertEquals([0x000000, 0x10ffff], UTF32::CODESPACE_RANGE);
+        $this->assertEquals([0x000000, 0x10ffff], $this->codespaceRange->getValue());
 
-        $this->assertEquals([0xd800, 0xdbff], UTF32::HIGH_SURROGATE_RANGE);
+        $this->assertEquals([0xd800, 0xdbff], $this->highSurrogateRange->getValue());
 
-        $this->assertEquals([0xdc00, 0xdfff], UTF32::LOW_SURROGATE_RANGE);
+        $this->assertEquals([0xdc00, 0xdfff], $this->lowSurrogateRange->getValue());
 
-        $this->assertEquals($this->nochars, UTF32::NONCHARACTER_LIST);
+        $this->assertEquals($this->nonchars, $this->noncharacters->getValue());
     }
 
     public function testNumberMethods()
@@ -60,20 +92,20 @@ class UTF32Test extends \PHPUnit_Framework_TestCase
 
         $this->assertEquals(0x10ffff + 1 - (0xdfff - 0xd800 + 1), UTF32::numberOfValidCodePoints());
 
-        $this->assertEquals(0x10ffff + 1 - (0xdfff - 0xd800 + 1) - count($this->nochars), UTF32::numberOfCharacterCodePoints());
+        $this->assertEquals(0x10ffff + 1 - (0xdfff - 0xd800 + 1) - count($this->nonchars), UTF32::numberOfCharacterCodePoints());
     }
 
     /**
-     * @dataProvider getDataForTestGetPlaneSpecifications
+     * @dataProvider getDataForTestGetPlanes
      */
-    public function testGetPlaneSpecifications($index, $expected)
+    public function testGetPlanes($index, $expected)
     {
-        $spec = UTF32::getPlaneSpecifications($index);
+        $spec = UTF32::getPlanes($index);
 
         $this->assertEquals($expected, $spec);
     }
 
-    public function getDataForTestGetPlaneSpecifications()
+    public function getDataForTestGetPlanes()
     {
         return [
             [0, ['id' => 'Plane 0', 'range' => [0x0000, 0xffff], 'name' => 'Basic Multilingual Plane', 'alias'=> 'BMP']],
