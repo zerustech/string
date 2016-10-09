@@ -21,6 +21,11 @@ namespace ZerusTech\Component\String\Unicode;
 class UTF32
 {
     /**
+     * The version of unicode stanard.
+     */
+    const VERSION = '9.0.0';
+
+    /**
      * The range of unicode codespace.
      *
      * @var array The range of unicode codespace.
@@ -51,6 +56,8 @@ class UTF32
      * The 66 noncharacter code points are guaranteed never to be used for
      * encoding characters.
      *
+     * 0xfdd0 - 0xfdef and 0fffe, 0ffff, 1fffe, 1ffff ...
+     *
      * @var array The noncharacter code points.
      */
     private static $noncharacters = [
@@ -63,6 +70,25 @@ class UTF32
         0x08fffe, 0x08ffff, 0x09fffe, 0x09ffff, 0x0afffe, 0x0affff, 0x0bfffe, 0x0bffff,
         0x0cfffe, 0x0cffff, 0x0dfffe, 0x0dffff, 0x0efffe, 0x0effff, 0x0ffffe, 0x0fffff,
         0x10fffe, 0x10ffff,
+    ];
+
+    /**
+     * The 65 code points are reserved as control codes.
+     *
+     * 0x0000 - 0x001f and 0x007f - 0x009f.
+     *
+     * @var array The control characters code points.
+     */
+    private static $controlCharacters = [
+        0x0000, 0x0001, 0x0002, 0x0003, 0x0004, 0x0005, 0x0006, 0x0007,
+        0x0008, 0x0009, 0x000a, 0x000b, 0x000c, 0x000d, 0x000e, 0x000f,
+        0x0010, 0x0011, 0x0012, 0x0013, 0x0014, 0x0015, 0x0016, 0x0017,
+        0x0018, 0x0019, 0x001a, 0x001b, 0x001c, 0x001d, 0x001e, 0x001f,
+        0x007f,
+        0x0080, 0x0081, 0x0082, 0x0083, 0x0084, 0x0085, 0x0086, 0x0087,
+        0x0088, 0x0089, 0x008a, 0x008b, 0x008c, 0x008d, 0x008e, 0x008f,
+        0x0090, 0x0091, 0x0092, 0x0093, 0x0094, 0x0095, 0x0096, 0x0097,
+        0x0098, 0x0099, 0x009a, 0x009b, 0x009c, 0x009d, 0x009e, 0x009f,
     ];
 
     /**
@@ -89,6 +115,13 @@ class UTF32
         12 => ['id' => 'Plane 12', 'range' => [0xc0000, 0xcffff], 'name' => null, 'alias' => null, ],
         13 => ['id' => 'Plane 13', 'range' => [0xd0000, 0xdffff], 'name' => null, 'alias' => null, ],
     ];
+
+    /**
+     * Range of the private use area.
+     *
+     * @var array The range of the private use area.
+     */
+    private static $privateUseAreaRange = [0xe000, 0xf8ff];
 
     /**
      * The pattern for converting utf32 to utf8.
@@ -125,6 +158,19 @@ class UTF32
      * @var array Compiled patterns for converting utf32 to utf8.
      */
     private static $compiledUTF8Patterns = null;
+
+    // Assigned characters = format + graphic + control + private
+    // Abstract characters:
+    //     e.g: the sequence of U+012F, U+0307, U+0301 = "į̇́"
+    //     character alias, e.g: "presentation form for vertical right white
+    //     lenticular bracket." for U+FE18
+    // Ready-made v.s. composite characters
+    // composite characters: characters that modify other characters,
+    // e.g, U+0301 " ́"
+    // precomposed characters, e.g: U+0065 + U+0301 = U+00E9, é
+    //
+    // private static $numberOfGraphicCharacters = 128019;
+    // private static $numberOfFormatCharacters = 153;
 
     /**
      * Returns the number of all possible code points, including surrogate code
@@ -196,7 +242,7 @@ class UTF32
      * @throws \OutOfBoundsException If no plane of the given index can be
      * found.
      */
-    public static function getPlanes($index)
+    public static function getPlane($index)
     {
         if (!array_key_exists($index, static::$planes)) {
 

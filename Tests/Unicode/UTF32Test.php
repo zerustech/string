@@ -46,6 +46,9 @@ class UTF32Test extends \PHPUnit_Framework_TestCase
         $this->compiledUTF8Patterns = $this->ref->getProperty('compiledUTF8Patterns');
         $this->compiledUTF8Patterns->setAccessible(true);
 
+        $this->privateUseAreaRange = $this->ref->getProperty('privateUseAreaRange');
+        $this->privateUseAreaRange->setAccessible(true);
+
         $this->nonchars = range(0xfdd0, 0xfdef);
 
         foreach (range(0x00, 0x10) as $i) {
@@ -61,6 +64,7 @@ class UTF32Test extends \PHPUnit_Framework_TestCase
     public function tearDown()
     {
         $this->nonchars = null;
+        $this->privateUseAreaRange = null;
         $this->compiledUTF8Patterns = null;
         $this->plainUTF8Patterns = null;
         $this->planes = null;
@@ -80,6 +84,10 @@ class UTF32Test extends \PHPUnit_Framework_TestCase
         $this->assertEquals([0xdc00, 0xdfff], $this->lowSurrogateRange->getValue());
 
         $this->assertEquals($this->nonchars, $this->noncharacters->getValue());
+
+        $this->assertEquals([0xe000, 0xf8ff], $this->privateUseAreaRange->getValue());
+
+        $this->assertEquals('9.0.0', UTF32::VERSION);
     }
 
     public function testNumberMethods()
@@ -96,16 +104,16 @@ class UTF32Test extends \PHPUnit_Framework_TestCase
     }
 
     /**
-     * @dataProvider getDataForTestGetPlanes
+     * @dataProvider getDataForTestGetPlane
      */
-    public function testGetPlanes($index, $expected)
+    public function testGetPlane($index, $expected)
     {
-        $spec = UTF32::getPlanes($index);
+        $spec = UTF32::getPlane($index);
 
         $this->assertEquals($expected, $spec);
     }
 
-    public function getDataForTestGetPlanes()
+    public function getDataForTestGetPlane()
     {
         return [
             [0, ['id' => 'Plane 0', 'range' => [0x0000, 0xffff], 'name' => 'Basic Multilingual Plane', 'alias'=> 'BMP']],
