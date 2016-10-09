@@ -14,8 +14,78 @@ namespace ZerusTech\Component\String\Unicode;
 /**
  * This class represents the UTF32 encoding scheme.
  *
+ * Overview
+ * ---------
+ *
+ * Unicode defines a codespace of 1,114,112 code points in the range of 0x000000
+ * to 0x10ffff.
+ *
+ * The unicode codespace is divided into 17 planes, numbered 0 to 16:
+ *
+ * Plane  0: 0x000000 - 0x00ffff / Basic Multilingual Plane / BMP
+ * Plane  1: 0x010000 - 0x01ffff / Supplementary Multilingual Plane / SMP
+ * Plane  2: 0x020000 - 0x02ffff / Supplementary Ideographic Plane / SIP
+ * Plane 14: 0x0e0000 - 0x0effff / Supplementary Special-purpose Plane / SSP
+ * Plane 15: 0x0f0000 - 0x0fffff / Supplementary Private Use Area Plane A / SPUA-A
+ * Plane 16: 0x100000 - 0x10ffff / Supplementary Private Use Area Plane B / SPUA-B
+ * Plane 3 - 13: 0x030000 - 0x0dffff / Unassigned
+ *
+ * Character General Category
+ * ---------------------------
+ *
+ * Each code point has a single General Category property. The major categories
+ * are: Letter, Mark, Number, Punction, Symbol and Other. Within these
+ * categories, ther are subdivisions.
+ *
+ * Code points in the range 0xd800 - 0xdbff (1,024 code points) are known as the
+ * high-surrogate, and code points in the range 0xdc00 - 0xdfff (1,024 code
+ * points) are known as the low-surrogate. High and low surrogate code points
+ * are not valid by themselves. Thus the range of code points that are available
+ * for use as characters is 0x0000 - 0xd7ff and 0xe000 - 0x10ffff (111,206,4
+ * code points).
+ *
+ * Certain noncharacter code points are guranteed never to be used for encoding
+ * characters. There are 66 noncharacters: 0xfdd0 - 0xfdef and any code points
+ * ending in the value fffe or ffff (i.e., 0xfffe, 0xffff, 0x1fffe, 0x1ffff).
+ *
+ * Thus the number of code points that are available for characters is 1,111,998.
+ *
+ * Reserved code points are those code points which are available for use as
+ * encoded characters, but are not yet defined as characters by unicode.
+ *
+ * Private-use code points are considered to be assigned characters, but they
+ * have no interpretation specified by the unicode stanadrd. There are three
+ * private-use areas in the unicode codespace:
+ *
+ * - Private Use Area: 0xe000 - 0xf8ff (6,400 characters, inside the BMP plane).
+ * - Supplementary Private Use Area-A: 0xf0000 - 0xffffd (65,534 characters)
+ * - Supplementary Private Use Area-B: 0x100000 - 0x10fffd (65,534 characters)
+ *
+ * NOTE: The code points 0xffffe, 0xfffff, 0x10fffe and 0x10ffff are excluded
+ * as "noncharacter code points".
+ *
+ * Graphic characters are those characters with a General Category other than
+ * Cc, Cn, Co, Cs, Cf, Zl and Zp, that is to say ordinary visible characters
+ * (including spaces with a non-zero width). There are 128,019 graphic
+ * characters in unicode 9.0.0.
+ *
+ * Format characters are those characters with a General Category of 'Cf', 'Zl'
+ * or 'Zp'. These are invisible characters defined by unicode for a particular
+ * function. These include things like 0x200d (zero width joiner), 0x202d
+ * (left-to-right override, interlinear annotation characters 0xfff9 - 0xfffb)
+ * and the set of tag characters (0xe0001 and 0xe0020 - 0xe007f). They work
+ * behind the scenes to do useful things like bidirectional control and
+ * character shaping. There are 153 format characters in unicode 9.0.0.
+ *
+ * Sixty-five (65) code points (0x0000 - 0x001f and 0x007f - 0x009f) are
+ * reserved as control codes.
+ *
+ * Graphic characters, format characters, control characters, and private
+ * characters are known collectively as assigned characters.
+ *
  * @link https://en.wikipedia.org/wiki/UTF-32 UTF-32
  * @link https://en.wikipedia.org/wiki/Unicode Unicode
+ * @link http://www.babelstone.co.uk/Unicode/HowMany.html How many Characters
  * @author Michael Lee <michael.lee@zerustech.com>
  */
 class UTF32
@@ -158,19 +228,6 @@ class UTF32
      * @var array Compiled patterns for converting utf32 to utf8.
      */
     private static $compiledUTF8Patterns = null;
-
-    // Assigned characters = format + graphic + control + private
-    // Abstract characters:
-    //     e.g: the sequence of U+012F, U+0307, U+0301 = "į̇́"
-    //     character alias, e.g: "presentation form for vertical right white
-    //     lenticular bracket." for U+FE18
-    // Ready-made v.s. composite characters
-    // composite characters: characters that modify other characters,
-    // e.g, U+0301 " ́"
-    // precomposed characters, e.g: U+0065 + U+0301 = U+00E9, é
-    //
-    // private static $numberOfGraphicCharacters = 128019;
-    // private static $numberOfFormatCharacters = 153;
 
     /**
      * Returns the number of all possible code points, including surrogate code
